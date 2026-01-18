@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aiiko Hirayama | Music Producer</title>
+    <!-- Favicon: Icono en la pestaña del navegador (Flor de Cerezo) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts: Inter + Noto Sans JP -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        jp: ['Noto Sans JP', 'sans-serif'],
+                    },
+                    colors: {
+                        cyber: {
+                            base: '#0f0a1e',    // Violeta muy oscuro (fondo)
+                            surface: '#1a112f', // Tarjetas
+                            border: '#3b2d5f',  // Bordes sutiles
+                            accent: '#d946ef',  // Fuchsia neón
+                            accentSec: '#8b5cf6', // Violeta medio
+                        }
+                    },
+                    backgroundImage: {
+                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+                        'hero-glow': 'conic-gradient(from 90deg at 50% 50%, #0f0a1e 0%, #2e1065 50%, #0f0a1e 100%)',
+                    },
+                    animation: {
+                        'intro-expand': 'introExpand 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+                        'fade-out': 'fadeOut 1s ease-in-out forwards',
+                    },
+                    keyframes: {
+                        introExpand: {
+                            '0%': { opacity: '0', letterSpacing: '-0.5em', transform: 'scale(0.9)', filter: 'blur(10px)' },
+                            '50%': { opacity: '1', filter: 'blur(0px)' },
+                            '100%': { opacity: '1', letterSpacing: '0.1em', transform: 'scale(1)' },
+                        },
+                        fadeOut: {
+                            '0%': { opacity: '1', visibility: 'visible' },
+                            '100%': { opacity: '0', visibility: 'hidden' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Animaciones personalizadas */
+        .bar { animation: bounce 1s infinite ease-in-out; }
+        .bar:nth-child(2) { animation-delay: 0.1s; }
+        .bar:nth-child(3) { animation-delay: 0.2s; }
+        .bar:nth-child(4) { animation-delay: 0.3s; }
+        
+        @keyframes bounce {
+            0%, 100% { height: 10%; }
+            50% { height: 100%; }
+        }
+        
+        .playing .visualizer { opacity: 1; }
+        .visualizer { opacity: 0; transition: opacity 0.3s; }
+        
+        /* Toast Notification */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: rgba(20, 10, 40, 0.95);
+            color: #fff;
+            text-align: center;
+            border-radius: 12px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            opacity: 0;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.3s, bottom 0.3s;
+            border: 1px solid rgba(217, 70, 239, 0.3);
+        }
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 50px;
+        }
+
+        /* Clase para bloquear el scroll */
+        .no-scroll { overflow: hidden; }
+
+        /* Efecto de resaltado para enlace compartido */
+        @keyframes highlightPulse {
+            0% { box-shadow: 0 0 0 0 rgba(217, 70, 239, 0.7); border-color: #d946ef; }
+            70% { box-shadow: 0 0 0 20px rgba(217, 70, 239, 0); border-color: #d946ef; }
+            100% { box-shadow: 0 0 0 0 rgba(217, 70, 239, 0); }
+        }
+        .highlight-track {
+            animation: highlightPulse 2s ease-out infinite;
+            border-color: #d946ef !important;
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #d946ef, #8b5cf6, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<!-- Body starts with no-scroll to prevent moving during intro -->
+<body class="bg-cyber-base text-gray-300 font-sans antialiased selection:bg-cyber-accent selection:text-white overflow-x-hidden no-scroll">
+
+    <!-- INTRO WELCOME SCREEN -->
+    <div id="intro-screen" class="fixed inset-0 z-[1000] bg-cyber-base flex flex-col items-center justify-center hidden">
+        <div class="absolute inset-0 overflow-hidden opacity-30 pointer-events-none">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] bg-purple-900/30 rounded-full blur-[100px] animate-pulse"></div>
+        </div>
+        <div class="relative z-10 text-center px-4">
+            <div class="mb-6 flex justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-cyber-accent animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2C9 7 4 9 4 14a6 6 0 0 0 6 6c1 0 1.5-.5 2-1.5.5 1 1 1.5 2 1.5a6 6 0 0 0 6-6c0-5-5-7-8-12z" fill="currentColor" fill-opacity="0.2"/>
+                    <path d="M12 14v8"/>
+                    <path d="M12 18l3-2"/>
+                    <path d="M12 18l-3-2"/>
+                </svg>
+            </div>
+            <h1 id="intro-text" class="text-4xl md:text-7xl font-bold text-white font-jp opacity-0">
+                AIIKO <span class="text-cyber-accent">HIRAYAMA</span>
+            </h1>
+            <p class="mt-4 text-cyber-accentSec text-sm md:text-base tracking-[0.5em] uppercase opacity-70 animate-pulse">
+                Music Producer
+            </p>
+        </div>
+    </div>
+
+    <!-- Notificación Flotante -->
+    <div id="toast" class="toast shadow-lg shadow-purple-500/20"></div>
+
+    <!-- Background Ambient Glows -->
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-900/20 rounded-full blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-900/20 rounded-full blur-[120px]"></div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 bg-cyber-base/80 backdrop-blur-lg border-b border-cyber-border/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo con Sakura -->
+                <div class="flex items-center gap-3 z-50">
+                    <div class="p-2 bg-white/5 rounded-lg border border-white/10 group hover:border-cyber-accent/50 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-cyber-accent group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2C9 7 4 9 4 14a6 6 0 0 0 6 6c1 0 1.5-.5 2-1.5.5 1 1 1.5 2 1.5a6 6 0 0 0 6-6c0-5-5-7-8-12z" fill="currentColor" fill-opacity="0.2"/>
+                            <path d="M12 14v8"/>
+                            <path d="M12 18l3-2"/>
+                            <path d="M12 18l-3-2"/>
+                        </svg>
+                    </div>
+                    <span class="font-bold text-xl text-white tracking-tight font-jp">AIIKO <span class="text-cyber-accent">HIRAYAMA</span></span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden lg:flex items-center space-x-8">
+                    <a href="#home" class="hover:text-cyber-accent transition-colors text-sm font-medium" data-i18n="nav_home">Inicio</a>
+                    <a href="#portfolio" class="hover:text-cyber-accent transition-colors text-sm font-medium" data-i18n="nav_music">Música</a>
+                    <a href="#about" class="hover:text-cyber-accent transition-colors text-sm font-medium" data-i18n="nav_about">Sobre Mí</a>
+                    <a href="#community" class="hover:text-cyber-accent transition-colors text-sm font-medium" data-i18n="nav_community">Comunidad</a>
+                    <a href="#contact" class="hover:text-cyber-accent transition-colors text-sm font-medium" data-i18n="nav_contact">Contacto</a>
+                    
+                    <div class="flex items-center gap-2 border-l border-white/10 pl-6 ml-2">
+                        <button onclick="setLanguage('es')" class="text-xs hover:text-white transition-colors lang-btn opacity-50 hover:opacity-100" data-lang="es">ES</button>
+                        <button onclick="setLanguage('en')" class="text-xs hover:text-white transition-colors lang-btn opacity-50 hover:opacity-100" data-lang="en">EN</button>
+                        <button onclick="setLanguage('ja')" class="text-xs hover:text-white transition-colors lang-btn opacity-50 hover:opacity-100 font-jp" data-lang="ja">JP</button>
+                    </div>
+                </div>
+
+                <!-- Mobile Button -->
+                <button id="mobile-menu-btn" class="lg:hidden text-gray-300 hover:text-white p-2 z-50 relative">
+                    <i data-lucide="menu" class="w-7 h-7"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden fixed top-0 left-0 w-full h-screen bg-[#0f0a1e] z-[60] flex flex-col justify-center items-center space-y-8 lg:hidden transition-all duration-300">
+            <button onclick="closeMobileMenu()" class="absolute top-6 right-6 text-gray-400 hover:text-white p-2">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+            <div class="flex flex-col items-center gap-6">
+                <a href="#home" onclick="closeMobileMenu()" class="text-2xl font-bold text-white hover:text-cyber-accent transition-colors" data-i18n="nav_home">Inicio</a>
+                <a href="#portfolio" onclick="closeMobileMenu()" class="text-2xl font-bold text-white hover:text-cyber-accent transition-colors" data-i18n="nav_music">Música</a>
+                <a href="#about" onclick="closeMobileMenu()" class="text-2xl font-bold text-white hover:text-cyber-accent transition-colors" data-i18n="nav_about">Sobre Mí</a>
+                <a href="#community" onclick="closeMobileMenu()" class="text-2xl font-bold text-white hover:text-cyber-accent transition-colors" data-i18n="nav_community">Comunidad</a>
+                <a href="#contact" onclick="closeMobileMenu()" class="text-2xl font-bold text-white hover:text-cyber-accent transition-colors" data-i18n="nav_contact">Contacto</a>
+            </div>
+            <div class="flex gap-6 pt-8 border-t border-white/10 w-40 justify-center">
+                <button onclick="setLanguage('es'); closeMobileMenu()" class="text-lg font-bold text-gray-400 hover:text-white lang-btn" data-lang="es">ES</button>
+                <button onclick="setLanguage('en'); closeMobileMenu()" class="text-lg font-bold text-gray-400 hover:text-white lang-btn" data-lang="en">EN</button>
+                <button onclick="setLanguage('ja'); closeMobileMenu()" class="text-lg font-bold text-gray-400 hover:text-white lang-btn font-jp" data-lang="ja">JP</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="pt-32 pb-20 px-4 relative">
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <span class="inline-block py-1 px-3 rounded-full bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 text-sm mb-6 text-cyber-accent font-medium font-jp tracking-wider" data-i18n="hero_badge">
+                Producer & Remaker • JP/Global
+            </span>
+            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                <span data-i18n="hero_title_1">Melodías desde Japón</span> <br/>
+                <span class="text-gradient" data-i18n="hero_title_2">para el mundo.</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed" data-i18n="hero_desc">
+                Hola, soy Aiiko. Productora musical especializada en remakes fieles y composiciones originales llenas de emoción, creadas con pasión en FL Studio.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#portfolio" class="px-8 py-4 bg-gradient-to-r from-cyber-accent to-purple-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl transition-all transform hover:scale-105 shadow-lg shadow-purple-900/40 flex items-center justify-center gap-2">
+                    <i data-lucide="play-circle" class="w-5 h-5"></i> <span data-i18n="btn_listen">Escuchar Tracks</span>
+                </a>
+                <a href="#contact" class="px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2 backdrop-blur-sm">
+                    <i data-lucide="mail" class="w-5 h-5"></i> <span data-i18n="btn_contact">Contactar</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section id="portfolio" class="py-20 px-4 bg-black/20 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-2 font-jp" data-i18n="portfolio_title">Discografía</h2>
+                    <p class="text-gray-400" data-i18n="portfolio_subtitle">Mis remakes y temas originales más recientes.</p>
+                </div>
+                
+                <div class="flex flex-wrap gap-2" id="filters">
+                    <button class="filter-btn active px-4 py-2 rounded-full text-sm font-medium bg-cyber-accent/20 text-cyber-accent border border-cyber-accent/50 transition-all" data-filter="all" data-i18n="filter_all">Todos</button>
+                    <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-transparent text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-all" data-filter="Original" data-i18n="filter_original">Originales</button>
+                    <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-transparent text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-all" data-filter="Remake" data-i18n="filter_remake">Remakes</button>
+                    <button class="filter-btn px-4 py-2 rounded-full text-sm font-medium bg-transparent text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-all" data-filter="Lo-Fi">Lo-Fi / Chill</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="projects-grid">
+                <!-- Se llenará con JS -->
+            </div>
+
+            <!-- Botón Cargar Más -->
+            <div class="mt-12 text-center">
+                <button id="load-more-btn" onclick="loadMore()" class="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium rounded-lg transition-all hidden">
+                    <span data-i18n="btn_load_more">Cargar más</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 px-4 border-t border-cyber-border/30 bg-cyber-surface/30">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
+            <div class="w-full md:w-1/2 relative">
+                <div class="aspect-square rounded-3xl bg-gradient-to-br from-purple-900/50 to-black border border-white/10 flex items-center justify-center relative overflow-hidden group shadow-2xl shadow-purple-900/20">
+                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225255756-d9584f8606e9?q=80&w=1000&auto=format&fit=crop')] bg-cover bg-center opacity-50 group-hover:scale-110 transition-transform duration-700 mix-blend-overlay"></div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-cyber-base via-transparent to-transparent"></div>
+                    
+                    <div class="relative z-10 text-center">
+                        <div class="w-20 h-20 mx-auto bg-gradient-to-br from-cyber-accent to-blue-600 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-purple-500/30">
+                            <i data-lucide="mic-2" class="w-10 h-10 text-white"></i>
+                        </div>
+                        <p class="font-bold text-2xl text-white font-jp">Aiiko Hirayama</p>
+                        <p class="text-sm text-gray-400 font-jp tracking-widest">平山 愛子</p>
+                    </div>
+                </div>
+            </div>
+            <div class="w-full md:w-1/2">
+                <h2 class="text-3xl font-bold text-white mb-6" data-i18n="about_title">Sobre mí</h2>
+                <div class="space-y-4 text-gray-400 leading-relaxed text-lg">
+                    <p data-i18n="about_p1">
+                        <span class="text-cyber-accent font-jp">Hajimemashite (はじめまして).</span> Soy Aiiko, una productora musical de origen japonés con una obsesión por los detalles sonoros.
+                    </p>
+                    <p data-i18n="about_p2">
+                        Mi viaje comenzó recreando mis canciones favoritas nota por nota en FL Studio. Hoy, combino esa técnica precisa en mis **Remakes** con mi propia sensibilidad en mis **Temas Originales**.
+                    </p>
+                </div>
+                
+                <div class="mt-8 grid grid-cols-2 gap-4">
+                    <button onclick="filterFromAbout('Remake')" class="text-left p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-cyber-accent/50 hover:bg-white/10 transition-all group cursor-pointer">
+                        <i data-lucide="refresh-cw" class="text-cyber-accent mb-3 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="text-white font-bold" data-i18n="card_remake_title">Remakes</h3>
+                        <p class="text-sm text-gray-500 mt-1" data-i18n="card_remake_desc">Recreaciones instrumentales precisas.</p>
+                    </button>
+                    <button onclick="filterFromAbout('Original')" class="text-left p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-cyber-accent/50 hover:bg-white/10 transition-all group cursor-pointer">
+                        <i data-lucide="sparkles" class="text-blue-400 mb-3 group-hover:scale-110 transition-transform"></i>
+                        <h3 class="text-white font-bold" data-i18n="card_original_title">Originals</h3>
+                        <p class="text-sm text-gray-500 mt-1" data-i18n="card_original_desc">Producción y composición propia.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community / Discord Section -->
+    <section id="community" class="py-20 px-4 border-t border-cyber-border/30 bg-cyber-base">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="flex items-center justify-center gap-2 mb-4">
+                 <i data-lucide="gamepad-2" class="text-cyber-accent w-6 h-6"></i>
+                 <span class="text-cyber-accent font-bold tracking-widest text-sm uppercase">Community</span>
+            </div>
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-8" data-i18n="comm_title">Únete al Servidor</h2>
+            
+            <div class="flex flex-col md:flex-row gap-8 items-center justify-center">
+                <div class="w-full max-w-sm h-[500px] bg-cyber-surface rounded-xl border border-white/10 overflow-hidden shadow-2xl relative group">
+                    <iframe src="https://discord.com/widget?id=1213298307653173318&theme=dark" width="100%" height="100%" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+                </div>
+
+                <div class="text-left max-w-sm space-y-4">
+                    <p class="text-gray-400" data-i18n="comm_desc">
+                        Comparte tus proyectos, consigue feedback y charla con otros productores en nuestro servidor oficial.
+                    </p>
+                    <a href="https://discord.gg/tuenlace" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold rounded-lg transition-colors w-full justify-center">
+                        <i data-lucide="message-square" class="w-5 h-5"></i>
+                        <span data-i18n="btn_discord">Entrar a Discord</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact CTA -->
+    <section id="contact" class="py-24 px-4 text-center">
+        <div class="max-w-3xl mx-auto bg-gradient-to-b from-white/5 to-transparent p-12 rounded-3xl border border-white/10 shadow-2xl">
+            <h2 class="text-3xl md:text-4xl font-bold text-white mb-6" data-i18n="contact_title">Trabajemos juntos</h2>
+            <p class="text-gray-400 mb-8 max-w-lg mx-auto" data-i18n="contact_subtitle">
+                ¿Necesitas un remake instrumental o una producción original? Envíame un mensaje.
+            </p>
+            <form class="max-w-md mx-auto space-y-4" onsubmit="handleContact(event)">
+                <input name="email" id="contact-email" type="email" placeholder="Tu correo electrónico" required class="w-full px-5 py-4 bg-black/40 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyber-accent focus:ring-1 focus:ring-cyber-accent transition-all placeholder-gray-600">
+                <textarea name="message" id="contact-message" placeholder="Cuéntame sobre tu proyecto" required rows="4" class="w-full px-5 py-4 bg-black/40 border border-white/10 rounded-xl text-white focus:outline-none focus:border-cyber-accent focus:ring-1 focus:ring-cyber-accent transition-all placeholder-gray-600"></textarea>
+                <button id="contact-btn" type="submit" class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition-colors transform active:scale-95 duration-200" data-i18n="btn_send">
+                    Enviar Mensaje
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-10 border-t border-white/5 text-center text-gray-600 text-sm">
+        <div class="flex justify-center gap-6 mb-6">
+            <a href="https://instagram.com/TU_USUARIO" target="_blank" class="hover:text-cyber-accent transition-colors p-2 bg-white/5 rounded-full hover:scale-110 transform duration-200"><i data-lucide="instagram" class="w-5 h-5"></i></a>
+            <a href="https://youtube.com/c/TU_CANAL" target="_blank" class="hover:text-cyber-accent transition-colors p-2 bg-white/5 rounded-full hover:scale-110 transform duration-200"><i data-lucide="youtube" class="w-5 h-5"></i></a>
+            <a href="https://soundcloud.com/TU_PERFIL" target="_blank" class="hover:text-cyber-accent transition-colors p-2 bg-white/5 rounded-full hover:scale-110 transform duration-200"><i data-lucide="music" class="w-5 h-5"></i></a>
+        </div>
+        <p class="font-jp" data-i18n="footer_text">&copy; 2024 Aiiko Hirayama. Made in Japan & FL Studio.</p>
+    </footer>
+
+    <!-- Script Logic -->
+    <script>
+        lucide.createIcons();
+        let audioPlayer = new Audio();
+        
+        let currentLang = 'en';
+
+        // GESTIÓN DE LA INTRODUCCIÓN
+        const introScreen = document.getElementById('intro-screen');
+        const introText = document.getElementById('intro-text');
+        
+        const INTRO_COOLDOWN = 3600000; 
+        
+        function handleIntro() {
+            const now = Date.now();
+            const lastShown = localStorage.getItem('lastIntroTime');
+
+            if (!lastShown || (now - parseInt(lastShown)) > INTRO_COOLDOWN) {
+                introScreen.classList.remove('hidden');
+                setTimeout(() => {
+                    introText.classList.add('animate-intro-expand');
+                }, 100);
+                setTimeout(() => {
+                    introScreen.classList.add('animate-fade-out');
+                    document.body.classList.remove('no-scroll');
+                    localStorage.setItem('lastIntroTime', now.toString());
+                    setTimeout(() => {
+                        introScreen.style.display = 'none';
+                    }, 1000);
+                }, 3500);
+            } else {
+                introScreen.style.display = 'none';
+                document.body.classList.remove('no-scroll');
+            }
+        }
+        handleIntro();
+
+        const translations = {
+            es: {
+                page_title: "Aiiko Hirayama | Productora Musical",
+                nav_home: "Inicio",
+                nav_music: "Música",
+                nav_about: "Sobre Mí",
+                nav_community: "Comunidad",
+                nav_contact: "Contacto",
+                hero_badge: "Producer & Remaker • JP/Global",
+                hero_title_1: "Melodías desde Japón",
+                hero_title_2: "para el mundo.",
+                hero_desc: "Hola, soy Aiiko. Productora musical especializada en remakes fieles y composiciones originales llenas de emoción, creadas con pasión en FL Studio.",
+                btn_listen: "Escuchar Tracks",
+                btn_contact: "Contactar",
+                portfolio_title: "Discografía",
+                portfolio_subtitle: "Mis remakes y temas originales más recientes.",
+                filter_all: "Todos",
+                filter_original: "Originales",
+                filter_remake: "Remakes",
+                about_title: "Sobre mí",
+                about_p1: '<span class="text-cyber-accent font-jp">Hajimemashite (はじめまして).</span> Soy Aiiko, una productora musical de origen japonés con una obsesión por los detalles sonoros.',
+                about_p2: 'Mi viaje comenzó recreando mis canciones favoritas nota por nota en FL Studio. Hoy, combino esa técnica precisa en mis **Remakes** con mi propia sensibilidad en mis **Temas Originales**.',
+                card_remake_title: "Remakes",
+                card_remake_desc: "Recreaciones instrumentales precisas.",
+                card_original_title: "Originals",
+                card_original_desc: "Producción y composición propia.",
+                comm_title: "Únete al Servidor",
+                comm_desc: "Comparte tus proyectos, consigue feedback y charla con otros productores en nuestro servidor oficial.",
+                btn_discord: "Entrar a Discord",
+                contact_title: "Trabajemos juntos",
+                contact_subtitle: "¿Necesitas un remake instrumental o una producción original? Envíame un mensaje.",
+                btn_send: "Enviar Mensaje",
+                footer_text: "© 2024 Aiiko Hirayama. Made in Japan & FL Studio.",
+                card_download: "Descargar / Comprar",
+                card_share: "Copiar Enlace Track",
+                msg_copied: "¡Enlace único del track copiado!",
+                msg_opening_mail: "Abriendo aplicación de correo...",
+                msg_no_audio: "Audio no disponible (Demo)",
+                placeholder_email: "Tu correo electrónico",
+                placeholder_msg: "Cuéntame sobre tu proyecto",
+                val_required: "Por favor, completa este campo.",
+                val_email: "Introduce un correo electrónico válido.",
+                msg_sending: "Enviando...",
+                msg_sent_success: "¡Mensaje recibido! Te responderé pronto.",
+                msg_sent_error: "Hubo un error. Por favor intenta más tarde.",
+                btn_load_more: "Cargar más",
+                project_soon: "PRONTO"
+            },
+            en: {
+                page_title: "Aiiko Hirayama | Music Producer",
+                nav_home: "Home",
+                nav_music: "Music",
+                nav_about: "About",
+                nav_community: "Community",
+                nav_contact: "Contact",
+                hero_badge: "Producer & Remaker • JP/Global",
+                hero_title_1: "Melodies from Japan",
+                hero_title_2: "to the world.",
+                hero_desc: "Hi, I'm Aiiko. Music producer specialized in faithful remakes and emotional original compositions, created with passion in FL Studio.",
+                btn_listen: "Listen to Tracks",
+                btn_contact: "Contact Me",
+                portfolio_title: "Discography",
+                portfolio_subtitle: "My latest remakes and original tracks.",
+                filter_all: "All",
+                filter_original: "Originals",
+                filter_remake: "Remakes",
+                about_title: "About Me",
+                about_p1: '<span class="text-cyber-accent font-jp">Hajimemashite (はじめまして).</span> I am Aiiko, a music producer of Japanese origin with an obsession for sonic details.',
+                about_p2: 'My journey began recreating my favorite songs note for note in FL Studio. Today, I combine that precise technique in my **Remakes** with my own sensibility in my **Original Tracks**.',
+                card_remake_title: "Remakes",
+                card_remake_desc: "Precise instrumental recreations.",
+                card_original_title: "Originals",
+                card_original_desc: "Original production and composition.",
+                comm_title: "Join the Server",
+                comm_desc: "Share your projects, get feedback and chat with other producers on our official server.",
+                btn_discord: "Join Discord",
+                contact_title: "Let's Work Together",
+                contact_subtitle: "Need an instrumental remake or an original production? Send me a message.",
+                btn_send: "Send Message",
+                footer_text: "© 2024 Aiiko Hirayama. Made in Japan & FL Studio.",
+                card_download: "Download / Buy",
+                card_share: "Copy Track Link",
+                msg_copied: "Unique track link copied!",
+                msg_opening_mail: "Opening mail app...",
+                msg_no_audio: "Audio not available (Demo)",
+                placeholder_email: "Your email address",
+                placeholder_msg: "Tell me about your project",
+                val_required: "Please fill out this field.",
+                val_email: "Please enter a valid email address.",
+                msg_sending: "Sending...",
+                msg_sent_success: "Message received! I'll get back to you soon.",
+                msg_sent_error: "There was an error. Please try again later.",
+                btn_load_more: "Load More",
+                project_soon: "SOON"
+            },
+            ja: {
+                page_title: "Aiiko Hirayama | 音楽プロデューサー",
+                nav_home: "ホーム",
+                nav_music: "音楽",
+                nav_about: "自己紹介",
+                nav_community: "コミュニティ",
+                nav_contact: "お問い合わせ",
+                hero_badge: "プロデューサー & リメーカー • JP/Global",
+                hero_title_1: "日本からのメロディー",
+                hero_title_2: "世界へ届けます。",
+                hero_desc: "こんにちは、アイコです。FL Studioで情熱を持って作られた、忠実なリメイクと感情豊かなオリジナル楽曲を専門とする音楽プロデューサーです。",
+                btn_listen: "曲を聴く",
+                btn_contact: "連絡する",
+                portfolio_title: "ディスコグラフィー",
+                portfolio_subtitle: "最新のリメイクとオリジナル曲。",
+                filter_all: "すべて",
+                filter_original: "オリジナル",
+                filter_remake: "リメイク",
+                about_title: "私について",
+                about_p1: '<span class="text-cyber-accent font-jp">はじめまして。</span> 音の細部にこだわりを持つ日本人音楽プロデューサーのアイコです。',
+                about_p2: '私の旅は、FL Studioでお気に入りの曲を一つ一つ再現することから始まりました。今日では、その精密な技術を**リメイク**に活かし、**オリジナル曲**では独自の感性を表現しています。',
+                card_remake_title: "リメイク",
+                card_remake_desc: "精密なインストゥルメンタル再現",
+                card_original_title: "オリジナル",
+                card_original_desc: "独自の制作と作曲",
+                comm_title: "サーバーに参加",
+                comm_desc: "プロジェクトを共有し、フィードバックを得て、他のプロデューサーとチャットしましょう。",
+                btn_discord: "Discordに参加",
+                contact_title: "一緒に作りましょう",
+                contact_subtitle: "インストのリメイクやオリジナル制作が必要ですか？メッセージを送ってください。",
+                btn_send: "メッセージを送信",
+                footer_text: "© 2024 平山愛子. Made in Japan & FL Studio.",
+                card_download: "ダウンロード / 購入",
+                card_share: "トラックリンクをコピー",
+                msg_copied: "トラックのリンクをコピーしました！",
+                msg_opening_mail: "メールアプリを開いています...",
+                msg_no_audio: "音声は利用できません (デモ)",
+                placeholder_email: "メールアドレス",
+                placeholder_msg: "プロジェクトについて教えてください",
+                val_required: "このフィールドを入力してください。",
+                val_email: "有効なメールアドレスを入力してください。",
+                msg_sending: "送信中...",
+                msg_sent_success: "メッセージを受信しました！すぐに返信します。",
+                msg_sent_error: "エラーが発生しました。後でもう一度お試しください。",
+                btn_load_more: "もっと読み込む",
+                project_soon: "近日公開"
+            }
+        };
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.documentElement.setAttribute('lang', lang);
+            document.title = translations[lang].page_title;
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    if (key.includes('p1') || key.includes('title')) {
+                        el.innerHTML = translations[lang][key];
+                    } else {
+                        el.innerText = translations[lang][key];
+                    }
+                }
+            });
+            document.getElementById('contact-email').placeholder = translations[lang].placeholder_email;
+            document.getElementById('contact-message').placeholder = translations[lang].placeholder_msg;
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                if(btn.dataset.lang === lang) {
+                    btn.classList.remove('opacity-50');
+                    btn.classList.add('font-bold', 'text-cyber-accent');
+                } else {
+                    btn.classList.add('opacity-50');
+                    btn.classList.remove('font-bold', 'text-cyber-accent');
+                }
+            });
+            renderProjects(document.querySelector('.filter-btn.bg-cyber-accent\\/20')?.dataset.filter || 'all');
+        }
+
+        const inputs = [document.getElementById('contact-email'), document.getElementById('contact-message')];
+        inputs.forEach(input => {
+            input.addEventListener('invalid', function(e) {
+                e.target.setCustomValidity(translations[currentLang].val_required);
+            });
+            input.addEventListener('input', function(e) {
+                e.target.setCustomValidity('');
+            });
+        });
+
+        const projects = [
+            {
+                id: 1,
+                title: "Midnight Tokyo",
+                genre: "Original",
+                bpm: 120,
+                key: "Am",
+                image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?q=80&w=1000&auto=format&fit=crop", 
+                downloadUrl: "https://google.com", 
+                audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+            },
+            {
+                id: 2,
+                title: "Popular Hit (Remake)",
+                genre: "Remake",
+                bpm: 140,
+                key: "Cm",
+                image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=1000&auto=format&fit=crop",
+                downloadUrl: "https://dropbox.com",
+                audioUrl: ""
+            },
+            {
+                id: 3,
+                title: "Sakura Rain",
+                genre: "Lo-Fi",
+                bpm: 85,
+                key: "Gmaj",
+                image: "https://images.unsplash.com/photo-1528164344705-47542687000d?q=80&w=1000&auto=format&fit=crop",
+                downloadUrl: "#",
+                audioUrl: ""
+            },
+            {
+                id: 4,
+                title: "Anime OP Style",
+                genre: "Original",
+                bpm: 170,
+                key: "Fm",
+                image: "https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=1000&auto=format&fit=crop",
+                downloadUrl: "#",
+                audioUrl: ""
+            },
+            {
+                id: 5,
+                title: "Trap Anthem (Remake)",
+                genre: "Remake",
+                bpm: 144,
+                key: "Gm",
+                image: "https://images.unsplash.com/photo-1514525253440-b393452e3383?q=80&w=1000&auto=format&fit=crop",
+                downloadUrl: "#",
+                audioUrl: ""
+            },
+             {
+                id: 6,
+                title: "Kyoto Vibes",
+                genre: "Lo-Fi",
+                bpm: 90,
+                key: "Cmaj",
+                image: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1000&auto=format&fit=crop",
+                downloadUrl: "#",
+                audioUrl: ""
+            },
+            // 6 "SOON" Placeholders
+            { id: 7, title: "SOON_KEY", genre: "Upcoming", bpm: "???", key: "?", image: "", downloadUrl: "#", audioUrl: "" },
+            { id: 8, title: "SOON_KEY", genre: "Upcoming", bpm: "???", key: "?", image: "", downloadUrl: "#", audioUrl: "" },
+            { id: 9, title: "SOON_KEY", genre: "Upcoming", bpm: "???", key: "?", image: "", downloadUrl: "#", audioUrl: "" },
+            { id: 10, title: "SOON_KEY", genre: "Upcoming", bpm: "???", key: "?", image: "", downloadUrl: "#", audioUrl: "" },
+            { id: 11, title: "SOON_KEY", genre: "Upcoming", bpm: "???", key: "?", image: "", downloadUrl: "#", audioUrl: "" },
+            { id: 12, title: "SOON_KEY", genre: "Upcoming", bpm: "???", key: "?", image: "", downloadUrl: "#", audioUrl: "" }
+        ];
+
+        const FORM_ENDPOINT = "https://formspree.io/f/mlggjkpp"; 
+
+        const grid = document.getElementById('projects-grid');
+        const filters = document.getElementById('filters');
+        let currentPlaying = null;
+        let visibleProjects = 6;
+
+        function loadMore() {
+            visibleProjects += 6;
+            renderProjects(document.querySelector('.filter-btn.bg-cyber-accent\\/20')?.dataset.filter || 'all');
+        }
+
+        function renderProjects(filter = 'all') {
+            grid.innerHTML = '';
+            
+            // Filtrar todos los proyectos primero
+            let filtered = filter === 'all' 
+                ? projects 
+                : projects.filter(p => {
+                    if (filter === 'Original') return p.genre === 'Original';
+                    if (filter === 'Remake') return p.genre === 'Remake';
+                    if (filter === 'Lo-Fi') return p.genre === 'Lo-Fi';
+                    return true;
+                });
+
+            // Guardar total de items filtrados para saber si mostrar botón
+            const totalFiltered = filtered.length;
+
+            // Recortar según visibleProjects
+            const itemsToShow = filtered.slice(0, visibleProjects);
+
+            const t = translations[currentLang];
+
+            itemsToShow.forEach(project => {
+                const card = document.createElement('div');
+                card.id = `project-card-${project.id}`;
+                card.className = "group relative bg-cyber-surface border border-white/5 rounded-2xl overflow-hidden hover:border-cyber-accent/30 transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-black/40";
+                
+                let tagColor = 'bg-gray-500/20 text-gray-300';
+                if (project.genre === 'Remake') tagColor = 'bg-purple-500/20 text-purple-300';
+                if (project.genre === 'Original') tagColor = 'bg-blue-500/20 text-blue-300';
+                if (project.genre === 'Lo-Fi') tagColor = 'bg-emerald-500/20 text-emerald-300';
+                
+                let displayGenre = project.genre;
+                if(currentLang === 'ja') {
+                    if(project.genre === 'Original') displayGenre = 'オリジナル';
+                    if(project.genre === 'Remake') displayGenre = 'リメイク';
+                    if(project.genre === 'Upcoming') displayGenre = '近日公開';
+                }
+
+                // Título dinámico para "SOON"
+                let displayTitle = project.title === "SOON_KEY" ? t.project_soon : project.title;
+
+                // Contenido especial para "SOON" (sin play/download)
+                if (project.title === "SOON_KEY") {
+                    card.innerHTML = `
+                        <div class="h-48 relative flex items-center justify-center overflow-hidden bg-white/5">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-4xl font-bold text-white/10 font-jp tracking-widest">???</span>
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="text-white font-bold text-lg text-white/50">${displayTitle}</h3>
+                                    <span class="text-xs font-bold px-2 py-0.5 rounded-full mt-1 inline-block bg-white/5 text-white/30 border border-white/5">${displayGenre}</span>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-white/5 flex justify-between items-center opacity-30 cursor-not-allowed">
+                                <span class="text-xs text-gray-500 font-mono">KEY: ???</span>
+                                <div class="flex gap-2">
+                                    <div class="p-2 bg-white/5 rounded-full"><i data-lucide="lock" class="w-4 h-4"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Tarjeta Normal
+                    card.innerHTML = `
+                        <div class="h-48 relative flex items-center justify-center overflow-hidden bg-gray-900">
+                            <img src="${project.image}" alt="${project.title}" class="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-cyber-surface via-transparent to-transparent opacity-90"></div>
+                            <div class="visualizer absolute bottom-0 left-0 right-0 h-full flex items-end justify-center gap-1 pb-10 z-0 opacity-0 transition-opacity duration-300" id="vis-${project.id}">
+                                <div class="bar w-2 bg-cyber-accent/80 h-10 rounded-full"></div>
+                                <div class="bar w-2 bg-cyber-accentSec/80 h-16 rounded-full"></div>
+                                <div class="bar w-2 bg-cyber-accent/80 h-8 rounded-full"></div>
+                                <div class="bar w-2 bg-cyber-accentSec/80 h-12 rounded-full"></div>
+                            </div>
+                            <button onclick="togglePlay(${project.id})" class="relative z-20 w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:scale-110 hover:bg-cyber-accent hover:border-cyber-accent transition-all duration-300 shadow-xl group-hover:opacity-100">
+                                <i data-lucide="play" class="fill-current w-6 h-6 ml-1" id="icon-${project.id}"></i>
+                            </button>
+                        </div>
+                        <div class="p-5">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="text-white font-bold text-lg group-hover:text-cyber-accent transition-colors truncate max-w-[180px]" title="${project.title}">${project.title}</h3>
+                                    <span class="text-xs font-bold px-2 py-0.5 rounded-full mt-1 inline-block ${tagColor} border border-white/5">${displayGenre}</span>
+                                </div>
+                                <span class="text-xs font-mono bg-black/30 text-gray-400 px-2 py-1 rounded-md border border-white/5 whitespace-nowrap">
+                                    ${project.bpm} BPM
+                                </span>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+                                <span class="text-xs text-gray-500 font-mono">KEY: ${project.key}</span>
+                                <div class="flex gap-2">
+                                    <button onclick="handleDownload('${project.downloadUrl}')" class="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full" title="${t.card_download}">
+                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                    </button>
+                                    <button onclick="handleShare(${project.id}, '${project.title}', '${project.genre}')" class="text-gray-400 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full" title="${t.card_share}">
+                                        <i data-lucide="share-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                grid.appendChild(card);
+            });
+            
+            // Gestionar visibilidad del botón "Cargar más"
+            const loadMoreBtn = document.getElementById('load-more-btn');
+            if (totalFiltered > visibleProjects) {
+                loadMoreBtn.classList.remove('hidden');
+                loadMoreBtn.querySelector('span').innerText = t.btn_load_more;
+            } else {
+                loadMoreBtn.classList.add('hidden');
+            }
+            
+            lucide.createIcons();
+        }
+
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileBtn.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+            document.body.classList.add('no-scroll');
+        });
+
+        function closeMobileMenu() {
+            mobileMenu.classList.add('hidden');
+            document.body.classList.remove('no-scroll');
+        }
+
+        window.filterFromAbout = function(filterType) {
+            document.getElementById('portfolio').scrollIntoView({ behavior: 'smooth' });
+            const btn = document.querySelector(`.filter-btn[data-filter="${filterType}"]`);
+            if(btn) btn.click();
+        }
+
+        window.togglePlay = function(id) {
+            const project = projects.find(p => p.id === id);
+            if (!project.audioUrl) {
+                showToast(translations[currentLang].msg_no_audio);
+                return;
+            }
+            const icon = document.getElementById(`icon-${id}`);
+            const visualizer = document.getElementById(`vis-${id}`);
+            const button = icon.parentElement;
+
+            if (currentPlaying === id) {
+                audioPlayer.pause();
+                stopTrackUI(id);
+                currentPlaying = null;
+            } else {
+                if (currentPlaying) {
+                    stopTrackUI(currentPlaying);
+                }
+                audioPlayer.src = project.audioUrl;
+                audioPlayer.play();
+                
+                icon.setAttribute('data-lucide', 'pause');
+                icon.classList.remove('ml-1'); 
+                button.classList.add('bg-cyber-accent', 'border-cyber-accent');
+                visualizer.style.opacity = '1';
+                currentPlaying = id;
+
+                audioPlayer.onended = function() {
+                    stopTrackUI(id);
+                    currentPlaying = null;
+                };
+            }
+            lucide.createIcons();
+        }
+
+        function stopTrackUI(id) {
+            const icon = document.getElementById(`icon-${id}`);
+            const visualizer = document.getElementById(`vis-${id}`);
+            if(!icon) return; 
+            const button = icon.parentElement;
+            icon.setAttribute('data-lucide', 'play');
+            icon.classList.add('ml-1');
+            button.classList.remove('bg-cyber-accent', 'border-cyber-accent');
+            visualizer.style.opacity = '0';
+            lucide.createIcons();
+        }
+
+        // LÓGICA DE CONTACTO MEJORADA (Soporte Formspree)
+        window.handleContact = async function(event) {
+            event.preventDefault();
+            const emailInput = document.getElementById('contact-email');
+            const messageInput = document.getElementById('contact-message');
+            
+            // Validación visual simple
+            if(!emailInput.value || !messageInput.value) return;
+
+            // Si hay un endpoint configurado, usamos AJAX para enviar el formulario
+            if (FORM_ENDPOINT && FORM_ENDPOINT.length > 5) {
+                const btn = document.getElementById('contact-btn');
+                const originalText = btn.innerText;
+                const t = translations[currentLang];
+                
+                // Estado de carga
+                btn.innerText = t.msg_sending;
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                try {
+                    const response = await fetch(FORM_ENDPOINT, {
+                        method: 'POST',
+                        body: new FormData(event.target),
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        showToast(t.msg_sent_success);
+                        event.target.reset();
+                    } else {
+                        showToast(t.msg_sent_error);
+                    }
+                } catch (error) {
+                    showToast(t.msg_sent_error);
+                } finally {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            } else {
+                // FALLBACK: Mailto clásico si no se ha configurado el backend
+                const subject = encodeURIComponent("Portfolio Contact: " + emailInput.value);
+                const body = encodeURIComponent(`Message from: ${emailInput.value}\n\n${messageInput.value}`);
+                window.location.href = `mailto:${YOUR_EMAIL}?subject=${subject}&body=${body}`;
+                showToast(translations[currentLang].msg_opening_mail);
+            }
+        }
+
+        window.handleDownload = function(url) {
+            if (!url || url === "#") {
+                showToast(translations[currentLang].msg_no_audio);
+                return;
+            }
+            window.open(url, '_blank');
+        }
+
+        window.handleShare = function(id, title, genre) {
+            const baseUrl = window.location.href.split('?')[0];
+            const uniqueUrl = `${baseUrl}?track=${id}`;
+            const shareData = {
+                title: `Aiiko Hirayama - ${title}`,
+                text: `Listen to ${title} (${genre}) by Aiiko Hirayama`,
+                url: uniqueUrl
+            };
+            if (navigator.share) {
+                navigator.share(shareData).catch((err) => console.log('Error', err));
+            } else {
+                navigator.clipboard.writeText(uniqueUrl)
+                    .then(() => showToast(translations[currentLang].msg_copied));
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.className = "toast show shadow-lg shadow-purple-500/40";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        filters.addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('bg-cyber-accent/20', 'text-cyber-accent', 'border-cyber-accent/50');
+                    btn.classList.add('bg-transparent', 'text-gray-400', 'border-white/10');
+                });
+                e.target.classList.remove('bg-transparent', 'text-gray-400', 'border-white/10');
+                e.target.classList.add('bg-cyber-accent/20', 'text-cyber-accent', 'border-cyber-accent/50');
+
+                if(currentPlaying) {
+                    audioPlayer.pause();
+                    currentPlaying = null;
+                }
+                // Resetear paginación al cambiar filtro
+                visibleProjects = 6;
+                renderProjects(e.target.dataset.filter);
+            }
+        });
+
+        function checkForSharedTrack() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const trackId = urlParams.get('track');
+            if (trackId) {
+                setTimeout(() => {
+                    // Si el track está oculto por la paginación, expandir hasta encontrarlo
+                    // Para simplificar, si hay un track ID, mostramos todo (o suficientes)
+                    // Como los IDs son secuenciales, podemos estimar
+                    if (trackId > visibleProjects) {
+                        visibleProjects = Math.ceil(trackId / 6) * 6;
+                        renderProjects(); // Re-renderizar con más items visibles
+                    }
+
+                    const card = document.getElementById(`project-card-${trackId}`);
+                    if (card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        card.classList.add('highlight-track');
+                        setTimeout(() => {
+                            card.classList.remove('highlight-track');
+                        }, 2000);
+                    }
+                }, 500);
+            }
+        }
+
+        setLanguage('en');
+        checkForSharedTrack();
+
+    </script>
+</body>
+</html>
